@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SumYam Retail is a retail management and inventory operations platform with an optional browser-only static demo.">
+  <meta name="author" content="Saurav Shah Teli">
+  <title>SumYam Retail — Retail Operations</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-locked">
+  <div class="app-shell">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+      <div class="brand">
+        <div class="brand-icon">S</div>
+        <div class="brand-text">
+          <h1>SumYam Retail</h1>
+          <span class="brand-badge">Retail operations</span>
+        </div>
+      </div>
+
+      <div class="nav-group-title">Main Navigation</div>
+      <nav class="nav" id="mainNav">
+        <button class="nav-item active" data-section="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-section="products">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+          <span>Products</span>
+          <span class="nav-badge" id="navProductCount">0</span>
+        </button>
+        <button class="nav-item" data-section="inventory">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"/><path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4"/><circle cx="8" cy="18" r="2"/><path d="M10 18h4"/><circle cx="18" cy="18" r="2"/></svg>
+          <span>Inventory</span>
+          <span class="nav-badge" id="navLowStockBadge" style="display:none;background:var(--orange-bg);color:var(--orange-text)">!</span>
+        </button>
+        <button class="nav-item" data-section="sales">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+          <span>Sales & Billing</span>
+        </button>
+        <button class="nav-item" data-section="customers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Customers</span>
+        </button>
+        <button class="nav-item" data-section="suppliers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>Suppliers</span>
+        </button>
+        <button class="nav-item" data-section="reports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+          <span>Reports</span>
+        </button>
+        <button class="nav-item" data-section="audit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Stock Audit Log</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="connection-card" id="sidebarConnectionCard">
+          <div class="connection-status">
+            <span class="pulse-dot" id="dbPulseDot"></span>
+            <span id="dbStatusText">Connecting...</span>
+          </div>
+          <div class="connection-sub" id="dbStatusSub">Checking application mode</div>
+        </div>
+
+        <div class="student-tag">
+          <strong>Built for daily operations</strong>
+          Inventory · Sales · Purchasing
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN APP SHELL -->
+    <main class="main">
+      <!-- TOP NAVIGATION BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="menuToggleBtn" aria-label="Toggle navigation">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+          </button>
+          <div class="page-title-box">
+            <div class="page-breadcrumbs" id="pageBreadcrumb">SUMYAM RETAIL / OVERVIEW</div>
+            <h2 id="pageHeading">Dashboard</h2>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="global-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="globalSearchInput" placeholder="Quick search products or invoices...">
+          </div>
+
+          <div class="badge healthy" id="liveBadge" title="Backend connection status">
+            <span class="pulse-dot"></span> <span id="liveBadgeText">Loading</span>
+          </div>
+
+          <button class="action-icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+            <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          </button>
+
+          <div class="user-profile-badge" id="userProfileBadge">
+            <div class="avatar-circle" id="userAvatar">?</div>
+            <div class="user-meta">
+              <span class="user-name" id="userName">Signed out</span>
+              <span class="user-role" id="userRole"></span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" id="logoutBtn" hidden>Sign out</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- MAIN CONTENT -->
+      <div class="content-wrapper">
+
+        <!-- ==========================================
+             1. DASHBOARD SECTION
+             ========================================== -->
+        <section class="section active" id="dashboardSection">
+          <div class="hero-banner">
+            <div class="hero-content">
+              <span class="hero-tag">Store overview</span>
+              <h3>Your store, at a glance</h3>
+              <p>Track sales, manage inventory and keep daily operations moving from one place.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-white" data-navigate="sales">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                Create sale
+              </button>
+              <button class="btn btn-secondary" id="heroRestockBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Restock inventory
+              </button>
+            </div>
+          </div>
+
+          <!-- Alert for Low Stock -->
+          <div class="system-alert-banner" id="lowStockBanner" style="display:none;">
+            <div>
+              <strong>Stock Attention Required:</strong> <span id="lowStockBannerText">0 products are at or below reorder threshold.</span>
+            </div>
+            <button class="btn btn-sm btn-outline" data-navigate="inventory">Review Stock →</button>
+          </div>
+
+          <!-- KPI Stats Grid -->
+          <div class="stats-grid">
+            <article class="stat-card">
+              <div class="stat-icon purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Products</span>
+                <strong class="stat-value" id="kpiProducts">0</strong>
+                <span class="stat-foot"><span id="kpiCategories">0 categories</span> · <span id="kpiTotalUnits">0 units</span></span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total Sales Revenue</span>
+                <strong class="stat-value" id="kpiRevenue">₹0.00</strong>
+                <span class="stat-foot trend-up"><span>All-time completed sales</span></span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 7h20"/><path d="M2 17h20"/><path d="M6 3v18"/><path d="M18 3v18"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Inventory Valuation</span>
+                <strong class="stat-value" id="kpiValuation">₹0.00</strong>
+                <span class="stat-foot"><span id="kpiCostValuation">Cost: ₹0.00</span></span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Stock Alerts</span>
+                <strong class="stat-value" id="kpiLowStock">0</strong>
+                <span class="stat-foot"><span id="kpiOutStock">0 out of stock</span></span>
+              </div>
+            </article>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="two-col">
+            <article class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3>7-Day Sales Performance</h3>
+                  <p>Daily revenue trends from the active data source</p>
+                </div>
+                <span class="badge healthy" id="salesDataBadge">Live data</span>
+              </div>
+              <div class="chart-container" id="dashboardSalesChart">
+                <!-- Bar chart dynamic columns -->
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3>Inventory Health</h3>
+                  <p>Stock ratio across catalog items</p>
+                </div>
+              </div>
+              <div class="stock-donut-container">
+                <div class="donut-visual" id="stockDonutVisual">
+                  <div class="donut-inner">
+                    <strong id="healthyPctText">0%</strong>
+                    <span>Healthy</span>
+                  </div>
+                </div>
+                <div class="donut-legend">
+                  <div class="legend-item">
+                    <span class="legend-label"><i class="legend-dot" style="background:var(--green)"></i> Healthy Stock</span>
+                    <strong class="legend-value" id="healthyCountVal">0</strong>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-label"><i class="legend-dot" style="background:var(--orange)"></i> Low Stock (≤ Min)</span>
+                    <strong class="legend-value" id="lowCountVal">0</strong>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-label"><i class="legend-dot" style="background:var(--red)"></i> Out of Stock (0)</span>
+                    <strong class="legend-value" id="outCountVal">0</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- Recent Transactions -->
+          <article class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Recent Sales Invoices</h3>
+                <p>Latest completed transactions</p>
+              </div>
+              <button class="btn btn-sm btn-outline" data-navigate="sales">View All Sales →</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Invoice No</th>
+                    <th>Customer</th>
+                    <th>Sale Date</th>
+                    <th>Items Sold</th>
+                    <th>Grand Total</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardRecentSalesTbody">
+                  <tr><td colspan="7" class="empty-state">Loading transactions...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+        </section>
+
+        <!-- ==========================================
+             2. PRODUCTS CATALOG SECTION
+             ========================================== -->
+        <section class="section" id="productsSection">
+          <div class="section-header">
+            <div class="section-title">
+              <h3>Product Catalog</h3>
+              <p>Manage product items, SKUs, categories, retail & cost pricing, and stock levels.</p>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-secondary" id="importFakeApiBtn" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Import from Mock API
+              </button>
+              <button class="btn btn-primary" id="openAddProductModalBtn" data-admin-only>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                ＋ Add Product
+              </button>
+            </div>
+          </div>
+
+          <!-- Product Toolbar -->
+          <div class="toolbar">
+            <div class="search-input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="productSearchInput" placeholder="Search by product name, SKU or barcode...">
+            </div>
+            <select class="select-filter" id="productCategoryFilter">
+              <option value="all">All Categories</option>
+            </select>
+            <select class="select-filter" id="productStockFilter">
+              <option value="all">All Stock Statuses</option>
+              <option value="healthy">Healthy Stock</option>
+              <option value="low">Low Stock (≤ Min)</option>
+              <option value="out">Out of Stock</option>
+            </select>
+            <select class="select-filter" id="productSortFilter">
+              <option value="default">Sort: Default (Newest)</option>
+              <option value="name_asc">Name: A to Z</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="stock_low">Stock: Low to High</option>
+              <option value="stock_high">Stock: High to Low</option>
+            </select>
+          </div>
+
+          <article class="card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU / Barcode</th>
+                    <th>Category</th>
+                    <th>Cost Price</th>
+                    <th>Selling Price</th>
+                    <th>Stock Units</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                  <tr><td colspan="8" class="empty-state">Loading products...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- ==========================================
+             3. INVENTORY & STOCK MANAGEMENT
+             ========================================== -->
+        <section class="section" id="inventorySection">
+          <div class="section-header">
+            <div class="section-title">
+              <h3>Stock Inventory Control</h3>
+              <p>Real-time stock balance tracking, immediate adjustments, and supplier restock receiving.</p>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-secondary" data-navigate="audit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                View Audit Log
+              </button>
+              <button class="btn btn-primary" id="openRestockModalBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                Restock from Supplier
+              </button>
+            </div>
+          </div>
+
+          <!-- Inventory Status Cards -->
+          <div class="stats-grid inventory-stats-grid">
+            <article class="stat-card">
+              <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+              <div class="stat-info">
+                <span class="stat-label">Healthy Inventory</span>
+                <strong class="stat-value" id="invHealthyCount">0</strong>
+                <span class="stat-foot">Stock level above minimum threshold</span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg></div>
+              <div class="stat-info">
+                <span class="stat-label">Low Stock (Reorder Needed)</span>
+                <strong class="stat-value" id="invLowCount">0</strong>
+                <span class="stat-foot">Requires restock purchase order</span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg></div>
+              <div class="stat-info">
+                <span class="stat-label">Out of Stock (Zero Units)</span>
+                <strong class="stat-value" id="invOutCount">0</strong>
+                <span class="stat-foot">Products completely unavailable</span>
+              </div>
+            </article>
+          </div>
+
+          <article class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Quick Stock Adjustment Table</h3>
+                <p>Click adjust buttons (+/-) to update quantities and record each stock movement.</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Product & SKU</th>
+                    <th>Current Stock</th>
+                    <th>Min Reorder Level</th>
+                    <th>Status</th>
+                    <th>Quick Adjust</th>
+                  </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                  <tr><td colspan="5" class="empty-state">Loading inventory...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- ==========================================
+             4. SALES & BILLING (POS)
+             ========================================== -->
+        <section class="section" id="salesSection">
+          <div class="section-header">
+            <div class="section-title">
+              <h3>Sales & Billing Checkout</h3>
+              <p>Select products, generate verified invoices, recalculate tax & discounts, and deduct stock in a transaction.</p>
+            </div>
+          </div>
+
+          <!-- POS Dual Column Layout -->
+          <div class="pos-layout">
+            <!-- Product Picker -->
+            <article class="card" style="margin-bottom:0;">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3>Available Product Picker</h3>
+                  <p>Click any product to add to cart</p>
+                </div>
+              </div>
+              <div class="toolbar" style="margin-bottom:14px;">
+                <div class="search-input-wrap" style="max-width:none;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="text" id="posProductSearch" placeholder="Type to filter product items...">
+                </div>
+              </div>
+              <div class="product-picker-grid" id="posProductPickerGrid">
+                <!-- Dynamic cards -->
+              </div>
+            </article>
+
+            <!-- Cart & Billing Summary -->
+            <article class="card cart-panel">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3>Current Billing Cart</h3>
+                  <p id="posCartItemCount">0 items</p>
+                </div>
+                <button class="btn btn-sm btn-outline" id="posClearCartBtn">Clear Cart</button>
+              </div>
+
+              <div class="cart-items-list" id="posCartItemsList">
+                <div class="empty-state">Cart is empty.<br>Click items on the left to start billing.</div>
+              </div>
+
+              <div class="bill-calculation-box">
+                <div class="form-group">
+                  <label class="form-label">Customer Selection</label>
+                  <select class="form-control" id="posCustomerSelect">
+                    <option value="">Walk-in Customer (General)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Payment Mode</label>
+                  <select class="form-control" id="posPaymentMethodSelect">
+                    <option value="cash">Cash</option>
+                    <option value="upi">UPI / QR Payment</option>
+                    <option value="card">Debit / Credit Card</option>
+                    <option value="credit">Store Credit</option>
+                  </select>
+                </div>
+
+                <div class="bill-line">
+                  <span>Cart Subtotal</span>
+                  <b id="posSubtotalText">₹0.00</b>
+                </div>
+
+                <div class="bill-line">
+                  <span>Discount (₹)</span>
+                  <input type="number" id="posDiscountInput" class="discount-input-box" value="0" min="0" step="1">
+                </div>
+
+                <div class="bill-line">
+                  <span>GST / Tax (5%)</span>
+                  <b id="posTaxText">₹0.00</b>
+                </div>
+
+                <div class="bill-line grand-total">
+                  <span>Grand Total</span>
+                  <b id="posGrandTotalText">₹0.00</b>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="posCompleteSaleBtn" style="margin-top:12px;padding:12px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                  Complete Sale & Generate Invoice
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <!-- Sales History Card -->
+          <article class="card" style="margin-top:24px;">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Sales Ledger History</h3>
+                <p>All completed customer invoices</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Invoice No</th>
+                    <th>Customer Name</th>
+                    <th>Date</th>
+                    <th>Line Items Summary</th>
+                    <th>Payment Mode</th>
+                    <th>Grand Total</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="salesHistoryTableBody">
+                  <tr><td colspan="7" class="empty-state">Loading sales history...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- ==========================================
+             5. CUSTOMERS CRM
+             ========================================== -->
+        <section class="section" id="customersSection">
+          <div class="section-header">
+            <div class="section-title">
+              <h3>Customer Relationship Management (CRM)</h3>
+              <p>Keep track of customer accounts, contact details, total orders and lifetime store spend.</p>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-primary" id="openAddCustomerModalBtn" data-admin-only>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                ＋ Add Customer
+              </button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="customerSearchInput" placeholder="Search customer by name, phone or email...">
+            </div>
+          </div>
+
+          <article class="card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Customer Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Purchases</th>
+                    <th>Total Spent</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="customersTableBody">
+                  <tr><td colspan="7" class="empty-state">Loading customers...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- ==========================================
+             6. SUPPLIERS & PURCHASES
+             ========================================== -->
+        <section class="section" id="suppliersSection">
+          <div class="section-header">
+            <div class="section-title">
+              <h3>Suppliers & Purchasing</h3>
+              <p>Maintain vendor profiles, track supply purchase orders and restock delivery histories.</p>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-secondary" id="openPurchaseRestockBtn" data-admin-only>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                New Restock Order
+              </button>
+              <button class="btn btn-primary" id="openAddSupplierModalBtn" data-admin-only>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                ＋ Add Supplier
+              </button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="supplierSearchInput" placeholder="Search supplier by contact, company or phone...">
+            </div>
+          </div>
+
+          <article class="card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Company / Supplier</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Purchase Orders</th>
+                    <th>Total Sourced</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="suppliersTableBody">
+                  <tr><td colspan="7" class="empty-state">Loading suppliers...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="card purchase-orders-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h3>Purchase Orders</h3>
+                <p>Orders remain pending until an authorized user confirms physical receipt.</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead><tr><th>PO Number</th><th>Supplier</th><th>Date</th><th>Status</th><th>Total</th><th>Receipt</th></tr></thead>
+                <tbody id="purchaseOrdersTableBody"><tr><td colspan="6" class="empty-state">Loading purchase orders...</td></tr></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- ==========================================
+             7. REPORTS & ANALYTICS
+             ========================================== -->
+        <section class="section" id="reportsSection">
+          <div class="section-header">
+            <div class="section-title">
+              <h3>Analytics & Intelligence Reports</h3>
+              <p>Business analytics update from the active data source. Export data to JSON or CSV.</p>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-secondary" id="exportCsvBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export CSV
+              </button>
+              <button class="btn btn-primary" id="exportJsonBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export JSON
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="stat-info">
+                <span class="stat-label">Total Revenue</span>
+                <strong class="stat-value" id="reportRevenue">₹0.00</strong>
+                <span class="stat-foot">Cumulative sales receipts</span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+              <div class="stat-info">
+                <span class="stat-label">Gross Profit (Est.)</span>
+                <strong class="stat-value" id="reportProfit">₹0.00</strong>
+                <span class="stat-foot">Estimate from stored sale costs; costing method unverified</span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div>
+              <div class="stat-info">
+                <span class="stat-label">Inventory Retail Value</span>
+                <strong class="stat-value" id="reportInvValue">₹0.00</strong>
+                <span class="stat-foot">Current stock at selling prices</span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="stat-info">
+                <span class="stat-label">Stock Reorder Alerts</span>
+                <strong class="stat-value" id="reportAlertCount">0</strong>
+                <span class="stat-foot">Items low or out of stock</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="two-col">
+            <article class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3>Top Selling Products</h3>
+                  <p>Highest volume products sold via checkout</p>
+                </div>
+              </div>
+              <div class="rank-list" id="reportTopProductsList">
+                <div class="empty-state">Sales data will appear here.</div>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3>Category Inventory Distribution</h3>
+                  <p>Product variety and total units per category</p>
+                </div>
+              </div>
+              <div class="rank-list" id="reportCategoryList">
+                <div class="empty-state">Category data will appear here.</div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             8. STOCK AUDIT TRAIL
+             ========================================== -->
+        <section class="section" id="auditSection">
+          <div class="section-header">
+            <div class="section-title">
+              <h3>Stock Movement Audit Log</h3>
+              <p>Every sale, restocking purchase, and manual adjustment is strictly journaled with timestamp and previous/new stock balances.</p>
+            </div>
+          </div>
+
+          <article class="card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Product & SKU</th>
+                    <th>Movement Type</th>
+                    <th>Qty Delta</th>
+                    <th>Previous Stock</th>
+                    <th>New Stock</th>
+                    <th>Reference / Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="auditTableBody">
+                  <tr><td colspan="7" class="empty-state">Loading stock audit movements...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- UNIVERSAL MODAL SYSTEM -->
+  <div class="auth-gate" id="authGate" hidden>
+    <form class="auth-panel" id="loginForm" autocomplete="on">
+      <h1>SumYam Retail</h1>
+      <p>Sign in with your store account to continue.</p>
+      <label class="form-label" for="loginEmail">Email</label>
+      <input class="form-control" id="loginEmail" name="email" type="email" autocomplete="username" required>
+      <label class="form-label" for="loginPassword">Password</label>
+      <input class="form-control" id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+      <p class="auth-error" id="loginError" role="alert" hidden></p>
+      <button class="btn btn-primary" id="loginBtn" type="submit">Sign in</button>
+    </form>
+  </div>
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal-box" id="modalBox">
+      <!-- Dynamic modal content injected via JavaScript -->
+    </div>
+  </div>
+
+  <!-- INVOICE PRINT AREA (For clean print rendering) -->
+  <div id="invoicePrintArea"></div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- APPLICATION SCRIPT -->
+  <script src="static-demo.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

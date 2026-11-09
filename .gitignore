@@ -1,0 +1,31 @@
+# Local environment and credentials
+.env*
+
+# Runtime logs and database files
+/logs/
+*.log
+*.dmp
+*.pid
+*.frm
+*.ibd
+*.ibdata*
+ib_logfile*
+aria_log*
+/mysql/data/
+/data/
+/database/*.sql
+/database/*.db
+/database/*.sqlite
+/database/dumps/
+
+# Local backups and generated dependencies
+/backups/
+/safe_backups/
+/backup_review01/
+/node_modules/
+/vendor/
+
+# Operating system files
+Thumbs.db
+Desktop.ini
+.DS_Store
