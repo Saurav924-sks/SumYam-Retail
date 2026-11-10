@@ -1,0 +1,34 @@
+{
+	admin off
+	auto_https off
+}
+
+:{$PORT:80} {
+	root * /app
+	encode zstd gzip
+	log {
+		output stdout
+	}
+
+	@api path /api/analytics.php /api/auth.php /api/categories.php /api/customers.php /api/fake-api.php /api/products.php /api/purchases.php /api/sales.php /api/status.php /api/stock.php /api/suppliers.php
+	handle @api {
+		php_server @api {
+			root /app
+			file_server off
+		}
+	}
+
+	@assets path /index.html /index.js /static-demo.js /style.css /favicon.svg
+	handle @assets {
+		file_server
+	}
+
+	handle / {
+		rewrite * /index.html
+		file_server
+	}
+
+	handle {
+		respond "Not Found" 404
+	}
+}

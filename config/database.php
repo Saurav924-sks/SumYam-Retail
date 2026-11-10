@@ -11,6 +11,25 @@ define('DB_NAME', getenv('DB_NAME') ?: 'smartstore_db');
 define('DB_USER', getenv('DB_USER') ?: '');
 define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 
+function isProductionRuntime(): bool {
+    return getenv('APP_ENV') === 'production' || getenv('VERCEL_ENV') === 'production';
+}
+
+function getDatabaseTimeoutOptions(): array {
+    return [
+        PDO::ATTR_TIMEOUT => 5
+    ];
+}
+
+function configureDatabaseReadTimeout(): void {
+    if ((int)ini_get('mysqlnd.net_read_timeout') !== 10) {
+        $timeoutSet = ini_set('mysqlnd.net_read_timeout', '10');
+        if ($timeoutSet === false || (int)ini_get('mysqlnd.net_read_timeout') !== 10) {
+            throw new RuntimeException('Database timeout configuration is unavailable.');
+        }
+    }
+}
+
 $appTimezone = getenv('SMARTSTORE_TIMEZONE') ?: 'UTC';
 try {
     new DateTimeZone($appTimezone);
@@ -28,19 +47,62 @@ function getDBConnection(): PDO {
     static $pdo = null;
 
     if ($pdo === null) {
+        $production = isProductionRuntime();
+        $requiredEnvironment = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASS'];
+        if ($production) {
+            foreach ($requiredEnvironment as $name) {
+                $value = getenv($name);
+                if (!is_string($value) || trim($value) === '') {
+                    throw new RuntimeException('Database service configuration is unavailable.');
+                }
+            }
+        }
+
         if (DB_USER === '' || DB_PASS === '') {
             throw new RuntimeException('Database credentials are not configured.');
         }
 
+        configureDatabaseReadTimeout();
         $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-        $options = [
+        $options = getDatabaseTimeoutOptions() + [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
         ];
 
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        $caPem = getenv('DB_SSL_CA_PEM');
+        $caPath = null;
+        if ($production && (!is_string($caPem) || trim($caPem) === '')) {
+            throw new RuntimeException('Database TLS configuration is unavailable.');
+        }
+
+        if (is_string($caPem) && trim($caPem) !== '') {
+            if (!str_contains($caPem, '-----BEGIN CERTIFICATE-----')
+                || !str_contains($caPem, '-----END CERTIFICATE-----')) {
+                throw new RuntimeException('Database TLS configuration is invalid.');
+            }
+
+            $caPath = tempnam(sys_get_temp_dir(), 'sumyam-db-ca-');
+            if ($caPath === false) {
+                throw new RuntimeException('Database TLS configuration is unavailable.');
+            }
+            @chmod($caPath, 0600);
+            if (file_put_contents($caPath, $caPem, LOCK_EX) === false) {
+                @unlink($caPath);
+                throw new RuntimeException('Database TLS configuration is unavailable.');
+            }
+            $options[PDO::MYSQL_ATTR_SSL_CA] = $caPath;
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+        }
+
+        try {
+            $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        } finally {
+            if ($caPath !== null) {
+                @unlink($caPath);
+            }
+        }
         $pdo->exec("SET time_zone = '+00:00'");
     }
 
@@ -64,6 +126,9 @@ function testDBConnection(): array {
             'host'        => DB_HOST . ':' . DB_PORT
         ];
     } catch (Throwable $e) {
+        if (function_exists('logSystemError')) {
+            logSystemError('database connectivity', $e);
+        }
         return [
             'connected' => false,
             'error'     => 'Database connection failed.'

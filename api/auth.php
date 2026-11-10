@@ -3,12 +3,13 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/response.php';
 
 setApiHeaders();
-startSecureSession();
 
 $action = $_GET['action'] ?? 'session';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 try {
+    startSecureSession();
+
     if ($action === 'session' && $method === 'GET') {
         if (empty($_SESSION['user_id'])) {
             sendJsonResponse(true, ['authenticated' => false], 'Sign in required.');
@@ -40,8 +41,8 @@ try {
             sendJsonResponse(false, null, 'Invalid email or password.', 401);
         }
 
-        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
-        if (!filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+        $ipAddress = resolveLoginThrottleIp();
+        if ($ipAddress === null) {
             sendJsonResponse(false, null, 'Unable to verify sign-in request.', 400);
         }
 

@@ -1,5 +1,15 @@
 # Safe integration tests
 
+Run the database-free deployment hardening checks with:
+
+```sh
+php tests/test_deployment_hardening.php
+```
+
+These verify production/preview origin selection and same-origin enforcement,
+login throttling IP resolution, and MySQL timeout options without connecting to
+MySQL or Redis.
+
 `tests/test_api.php` and `tests/integration.php` run the same HTTP integration
 suite. The runner refuses to start unless `DB_NAME` is exactly
 `smartstore_test`, verifies `SELECT DATABASE()` reports that exact name, and

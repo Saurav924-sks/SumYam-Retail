@@ -143,8 +143,12 @@ The default live database name in configuration is `smartstore_db`. The isolated
 
 ```text
 .
+├── .dockerignore
 ├── .gitignore
 ├── ABOUT.md
+├── Caddyfile                  # Strict frontend/API route allowlist for FrankenPHP
+├── DEPLOYMENT.md              # Vercel Container Runtime and production configuration
+├── Dockerfile                 # PHP 8.4 FrankenPHP runtime image
 ├── README.md
 ├── Start_SmartStore.bat       # Existing Windows launcher; XAMPP path assumptions are unverified
 ├── favicon.svg
@@ -169,6 +173,8 @@ The default live database name in configuration is `smartstore_db`. The isolated
 │   └── create-user.php        # CLI-only admin/staff account bootstrap
 ├── config/
 │   └── database.php           # Environment config and PDO connection
+├── docker/
+│   └── zz-production.ini      # Production PHP logging and OPcache settings
 ├── database/
 │   └── migrations/
 │       └── 001_initial_schema.sql
@@ -272,15 +278,23 @@ Windows/XAMPP instructions are omitted because the checked-in batch launcher ass
 
 ## Environment variables
 
-These are the exact names read by the source. There is no `.env` parser or dotenv dependency.
+The application does not load `.env` files. For the public Vercel Hobby demonstration, no MySQL or Redis variables are needed; deploy the root Dockerfile and open the deployment URL with `?demo=1`. For the authenticated, database-backed API, configure the live-service variables below as described in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 | Variable | Purpose | Default / rule |
 |---|---|---|
+| `APP_ENV` | Runtime environment | `production` in the Docker image |
+| `APP_BASE_URL` | Canonical production HTTPS origin | Required for live API same-origin validation; Preview uses `VERCEL_URL` |
 | `DB_HOST` | MySQL host | `127.0.0.1` |
 | `DB_PORT` | MySQL port | `3306` |
 | `DB_NAME` | Database name | `smartstore_db`; integration runner requires exactly `smartstore_test` |
 | `DB_USER` | Database account | Empty by default; live connection refuses empty values |
 | `DB_PASS` | Database password | Empty by default; live connection refuses empty values |
+| `DB_SSL_CA_PEM` | MySQL TLS CA certificate | Required in production; server-certificate verification remains enabled |
+| `REDIS_URL` | PHP session store | TLS `rediss://` URL required for production API sessions |
+| `PORT` | HTTP listen port | Supplied by Vercel; Caddy defaults to `80` |
+| `VERCEL` | Vercel runtime marker | Supplied by Vercel |
+| `VERCEL_ENV` | Vercel deployment environment | Supplied by Vercel |
+| `VERCEL_URL` | Vercel deployment hostname | Supplied by Vercel; used for Preview origin validation |
 | `SMARTSTORE_TIMEZONE` | PHP application timezone | `UTC`; invalid timezone names stop configuration |
 | `SMARTSTORE_LOG_DIR` | Private application error-log directory | System temp directory plus `/smartstore-logs` |
 | `SMARTSTORE_BOOTSTRAP_EMAIL` | Email for CLI-created account | Required by `bin/create-user.php` |
@@ -301,7 +315,7 @@ These are the exact names read by the source. There is no `.env` parser or doten
 - Dynamic browser content is escaped by frontend rendering helpers. Review escaping and server validation whenever fields or rendering paths change.
 - Errors are returned as generic API messages; detailed exception traces go to a server-side log directory.
 
-These controls are a baseline, not a security certification. There is no MFA, password reset flow, online user-administration screen, payment processor, deployment hardening guide, or independent penetration-test report in the repository. Use HTTPS and a properly configured PHP server outside local development.
+These controls are a baseline, not a security certification. There is no MFA, password reset flow, online user-administration screen, payment processor, or independent penetration-test report in the repository. The Vercel Hobby setup is a public, non-commercial demonstration only; see [DEPLOYMENT.md](DEPLOYMENT.md). Use HTTPS and a properly configured PHP server outside local development.
 
 ## API reference
 
@@ -355,6 +369,8 @@ The suite defines 25 result checks. Two rollback checks depend on strict MySQL S
 
 The demo activates on a static-host path recognized by the existing code or when `?demo=1` is explicitly added to a static preview. Do not use static mode as a recovery path after a live API failure; live API failures remain errors.
 
+**Vercel Hobby demonstration:** open the deployment URL with `?demo=1`. This uses fictional data and browser-local storage, skips PHP session/API startup, and requires no MySQL or Redis service. The existing demo UI is intentionally unauthenticated and allows changes to fictional data in that visitor's browser only. The PHP API authentication is unchanged. This is public and non-commercial only; do not enter real business data or use it for store operations. See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment details.
+
 ## Limitations and roadmap
 
 Implemented behavior should be distinguished from possible future work:
@@ -395,6 +411,7 @@ There is no contribution license or code-of-conduct document in this repository.
 ## Additional documentation
 
 - [ABOUT.md](ABOUT.md) — deeper product, workflow, architecture, schema, and engineering explanation.
+- [DEPLOYMENT.md](DEPLOYMENT.md) — Vercel Container Runtime, FrankenPHP, Redis sessions, MySQL TLS, and smoke checks.
 - [tests/README.md](tests/README.md) — dedicated disposable-database setup for the safe HTTP integration suite.
 
 ## License
